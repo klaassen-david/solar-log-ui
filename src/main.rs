@@ -1,6 +1,6 @@
 use leptos::{server_fn::server, *};
 use log::Log;
-use plotly::{Layout, Plot, Scatter};
+use plotly::{layout::Axis, Layout, Plot, Scatter};
 
 mod log;
 
@@ -25,16 +25,30 @@ fn App(cx: Scope) -> impl IntoView {
 
     let log = log::Log::parse(log::file::CONTENT.to_string()).unwrap();
     let mut plot = Plot::new();
+    log!(
+        "{:?}",
+        log.timestamps
+            .iter()
+            .map(|t| t.to_rfc3339())
+            .collect::<Vec<_>>()
+    );
     let trace = Scatter::new(
         log.timestamps,
+        // .iter()
+        // .map(|t| t.to_rfc3339())
+        // .collect::<Vec<_>>(),
         log.entries[0]
             .iter()
             .map(|i| i.unwrap_or(0.0))
             .collect::<Vec<_>>(),
     );
     plot.add_trace(trace);
-    let layout = Layout::new().title(plotly::common::Title::new("best chart"));
+    let layout = Layout::new()
+        .title(plotly::common::Title::new("best chart"))
+        .x_axis(Axis::default().type_(plotly::layout::AxisType::Date));
     plot.set_layout(layout);
+    log!("created chart prerequisites");
+
     let render = create_action(cx, move |_input: &()| {
         let plot = plot.to_owned();
         log!("rendering");
@@ -45,7 +59,6 @@ fn App(cx: Scope) -> impl IntoView {
         }
         // async move { plotly::bindings::new_plot(&input.0, input.1).await }
     });
-    log!("created chart prerequisites");
 
     view! { cx,
         <script src="https://cdn.plot.ly/plotly-2.14.0.min.js"></script>

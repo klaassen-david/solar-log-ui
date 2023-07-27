@@ -1,3 +1,4 @@
+use chrono::{DateTime, FixedOffset, Local, NaiveDateTime, TimeZone, Utc};
 use leptos::log;
 use plotly::{Scatter, Trace};
 use serde::{Deserialize, Serialize};
@@ -10,7 +11,7 @@ pub struct Log {
     pub keys: Vec<String>,
     pub units: String,
     pub entries: Vec<Box<Vec<Option<f64>>>>,
-    pub timestamps: Vec<i64>,
+    pub timestamps: Vec<DateTime<Local>>,
 }
 
 #[derive(Error, Debug)]
@@ -60,7 +61,10 @@ impl Log {
                     .collect::<Vec<Option<f64>>>()
             })
             .for_each(|entry| {
-                log.timestamps.push(entry[0].unwrap() as i64);
+                log.timestamps.push(DateTime::<Local>::from_utc(
+                    NaiveDateTime::from_timestamp_opt(entry[0].unwrap() as i64, 0).unwrap(),
+                    FixedOffset::east_opt(2 * 60 * 60).unwrap(),
+                ));
                 (1..log.keys.len()).for_each(|i| {
                     log.entries
                         .get_mut(i - 1)

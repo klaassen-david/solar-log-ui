@@ -944,6 +944,7 @@ dependencies = [
 name = "kostalui"
 version = "0.1.0"
 dependencies = [
+ "chrono",
  "leptos",
  "leptos_chart",
  "plotly",
