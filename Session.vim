@@ -13,12 +13,16 @@ if &shortmess =~ 'A'
 else
   set shortmess=aoO
 endif
-badd +20 src/main.rs
-badd +4 ~/code/kostalui/src/log/mod.rs
+badd +37 src/main.rs
+badd +51 ~/code/kostalui/src/log/mod.rs
+badd +1 ~/code/kostalui/src/log/file.rs
+badd +0 log.txt
 argglobal
 %argdel
 $argadd src/main.rs
 set stal=2
+tabnew +setlocal\ bufhidden=wipe
+tabnew +setlocal\ bufhidden=wipe
 tabnew +setlocal\ bufhidden=wipe
 tabrewind
 edit src/main.rs
@@ -33,20 +37,20 @@ setlocal fdn=20
 setlocal fen
 8
 normal! zo
-20
+22
 normal! zo
-23
+28
 normal! zo
-25
+30
 normal! zo
-34
+40
 normal! zo
-let s:l = 20 - ((19 * winheight(0) + 24) / 49)
+let s:l = 10 - ((9 * winheight(0) + 24) / 49)
 if s:l < 1 | let s:l = 1 | endif
 keepjumps exe s:l
 normal! zt
-keepjumps 20
-normal! 025|
+keepjumps 10
+normal! 0
 tabnext
 edit ~/code/kostalui/src/log/mod.rs
 argglobal
@@ -59,26 +63,62 @@ setlocal fdl=99
 setlocal fml=1
 setlocal fdn=20
 setlocal fen
-21
+24
 normal! zo
-22
+30
 normal! zo
-45
-normal! zo
-47
-normal! zo
-48
+53
 normal! zo
 55
 normal! zo
-57
+56
 normal! zo
-let s:l = 4 - ((3 * winheight(0) + 24) / 49)
+63
+normal! zo
+65
+normal! zo
+let s:l = 51 - ((19 * winheight(0) + 24) / 49)
 if s:l < 1 | let s:l = 1 | endif
 keepjumps exe s:l
 normal! zt
-keepjumps 4
-normal! 065|
+keepjumps 51
+normal! 026|
+tabnext
+edit ~/code/kostalui/src/log/file.rs
+argglobal
+balt ~/code/kostalui/src/log/mod.rs
+setlocal fdm=indent
+setlocal fde=0
+setlocal fmr={{{,}}}
+setlocal fdi=#
+setlocal fdl=99
+setlocal fml=1
+setlocal fdn=20
+setlocal fen
+let s:l = 1 - ((0 * winheight(0) + 24) / 49)
+if s:l < 1 | let s:l = 1 | endif
+keepjumps exe s:l
+normal! zt
+keepjumps 1
+normal! 011|
+tabnext
+edit log.txt
+argglobal
+balt ~/code/kostalui/src/log/file.rs
+setlocal fdm=indent
+setlocal fde=0
+setlocal fmr={{{,}}}
+setlocal fdi=#
+setlocal fdl=99
+setlocal fml=1
+setlocal fdn=20
+setlocal fen
+let s:l = 1 - ((0 * winheight(0) + 24) / 49)
+if s:l < 1 | let s:l = 1 | endif
+keepjumps exe s:l
+normal! zt
+keepjumps 1
+normal! 0
 tabnext 1
 set stal=1
 if exists('s:wipebuf') && len(win_findbuf(s:wipebuf)) == 0 && getbufvar(s:wipebuf, '&buftype') isnot# 'terminal'
@@ -92,6 +132,7 @@ if filereadable(s:sx)
   exe "source " . fnameescape(s:sx)
 endif
 let &g:so = s:so_save | let &g:siso = s:siso_save
+nohlsearch
 doautoall SessionLoadPost
 unlet SessionLoad
 " vim: set ft=vim :

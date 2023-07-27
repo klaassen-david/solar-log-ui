@@ -1,4 +1,5 @@
 use leptos::log;
+use plotly::{Scatter, Trace};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
@@ -48,7 +49,6 @@ impl Log {
             entries,
             timestamps: Vec::new(),
         };
-        log!("last iter");
         lines
             .into_iter()
             .map(|line| {
@@ -63,11 +63,15 @@ impl Log {
                 log.timestamps.push(entry[0].unwrap() as i64);
                 (1..log.keys.len()).for_each(|i| {
                     log.entries
-                        .get_mut(i)
+                        .get_mut(i - 1)
                         .unwrap()
                         .push(*entry.get(i).unwrap_or(&None))
                 });
             });
         Ok(log)
+    }
+
+    pub fn scatter() -> Box<dyn Trace> {
+        todo!()
     }
 }
