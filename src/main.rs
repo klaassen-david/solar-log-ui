@@ -1,32 +1,42 @@
-use leptos::*;
+use leptos::{server_fn::server, *};
+use leptos_chart::{ScatterChart, Series};
+use log::Log;
 
 mod log;
-const PLOT_ID: &str = "plotid";
 
 fn main() {
-    mount_to_body(|cx| view! { cx, <App /> })
+    let log = log::Log::parse(log::file::CONTENT.to_string()).unwrap();
+    log!("{}", log.entries.len());
+    mount_to_body(|cx| {
+        view! { cx, <App /> }
+    })
+}
+
+#[server(ReadLog, "/log")]
+pub async fn read_log() -> Result<Log, ServerFnError> {
+    log::Log::parse_file("/home/dk/code/kostalui/log.txt".to_string())
 }
 
 #[component]
 fn App(cx: Scope) -> impl IntoView {
     let (count, set_count) = create_signal(cx, 0);
-    let log = log::Log::parse_file("log.txt".to_string()).unwrap();
-    dbg!(log);
 
-    let data = create_resource(
-        cx,
-        || (),
-        |_| async move {
-            let log = log::Log::parse_file("log.txt".to_string()).unwrap();
-            let mut plot = plotly::Plot::new();
-            let trace = plotly::Scatter::new(log.timestamps.clone(), *log.entries[3].clone());
-            plot.add_trace(trace);
-            plotly::bindings::new_plot(PLOT_ID, &plot).await;
-        },
-    );
+    log!("parsing log");
+    let log = log::Log::parse(log::file::CONTENT.to_string()).unwrap();
+    log!("{}", log.entries.len());
+    let chart = leptos_chart::Cartesian::new(
+        Series::from(log.timestamps),
+        Series::from(
+            log.entries[0]
+                .iter()
+                .map(|i| i.unwrap_or(0.0))
+                .collect::<Vec<_>>(),
+        ),
+    )
+    .set_view(820, 620, 3, 100, 100, 20);
+    log!("created chart");
 
     view! { cx,
-        <script src="https://cdn.plot.ly/plotly-2.14.0.min.js"></script>
         <button
             on:click=move |_| {
                 set_count.update(|n| *n += 1);
@@ -34,13 +44,10 @@ fn App(cx: Scope) -> impl IntoView {
         > "Click me:" {move || count()}
         </button>
 
-        {move || match data.read(cx) {
-                None => view! {cx, <p>"Loading..."</p> }.into_view(cx),
-                Some(_) => view! {cx, <p>"Loaded"</p> }.into_view(cx),
-            }}
-        <div
-            id=PLOT_ID
-        ></div>
+        <div class="mx-auto p-8">
+            <h1>"Scatter chart example"</h1>
+            <ScatterChart chart=chart />
+        </div>
 
     }
 }

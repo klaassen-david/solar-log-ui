@@ -1,13 +1,15 @@
-use leptos::IntoView;
-use plotly::{Plot, Scatter};
+use leptos::log;
+use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
-#[derive(Debug, Clone, PartialEq, Default)]
+pub mod file;
+
+#[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]
 pub struct Log {
     pub keys: Vec<String>,
     pub units: String,
-    pub entries: Vec<Box<Vec<Option<f32>>>>,
-    pub timestamps: Vec<i32>,
+    pub entries: Vec<Box<Vec<Option<f64>>>>,
+    pub timestamps: Vec<i64>,
 }
 
 #[derive(Error, Debug)]
@@ -21,11 +23,15 @@ pub enum ParseError {
 impl Log {
     pub fn parse_file(path: String) -> Result<Self, ParseError> {
         let binding = std::fs::read_to_string(path)?;
-        let mut lines = binding.lines();
+        Self::parse(binding)
+    }
+
+    pub fn parse(content: String) -> Result<Self, ParseError> {
+        let mut lines = content.lines();
         (0..5).for_each(|_| {
             lines.next();
         }); // cut header
-        let units = lines.next().unwrap().to_string();
+        let units: String = lines.next().unwrap().to_string();
         let keys: Vec<String> = match lines.next() {
             Some(lines) => lines.split('\t').map(|s| s.to_string()).collect(),
             None => {
@@ -33,8 +39,8 @@ impl Log {
             }
         };
         let len = keys.len();
-        let entries: Vec<Box<Vec<Option<f32>>>> = (0..len)
-            .map(|_| Box::new(Vec::<Option<f32>>::new()))
+        let entries = (0..len)
+            .map(|_| Box::new(Vec::<Option<f64>>::new()))
             .collect();
         let mut log = Log {
             keys,
@@ -42,18 +48,19 @@ impl Log {
             entries,
             timestamps: Vec::new(),
         };
+        log!("last iter");
         lines
             .into_iter()
             .map(|line| {
                 line.split('\t')
-                    .map(|v| match v.parse::<f32>() {
+                    .map(|v| match v.parse::<f64>() {
                         Ok(v) => Some(v),
                         Err(_) => None,
                     })
-                    .collect::<Vec<Option<f32>>>()
+                    .collect::<Vec<Option<f64>>>()
             })
             .for_each(|entry| {
-                log.timestamps.push(entry[0].unwrap() as i32);
+                log.timestamps.push(entry[0].unwrap() as i64);
                 (1..log.keys.len()).for_each(|i| {
                     log.entries
                         .get_mut(i)
@@ -62,13 +69,5 @@ impl Log {
                 });
             });
         Ok(log)
-    }
-
-    async fn draw(&self) -> impl IntoView {
-        let id = "plotid";
-        let mut plot = Plot::new();
-        let trace = Scatter::new(self.timestamps.clone(), *self.entries[3].clone());
-        plot.add_trace(trace);
-        plotly::bindings::new_plot(id, &plot).await;
     }
 }

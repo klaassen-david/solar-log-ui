@@ -13,9 +13,8 @@ if &shortmess =~ 'A'
 else
   set shortmess=aoO
 endif
-badd +21 src/main.rs
-badd +1 ~/code/kostalui/src/log/mod.rs
-badd +25 ~/.cargo/registry/src/index.crates.io-6f17d22bba15001f/plotly-0.8.4/src/bindings.rs
+badd +20 src/main.rs
+badd +4 ~/code/kostalui/src/log/mod.rs
 argglobal
 %argdel
 $argadd src/main.rs
@@ -24,7 +23,6 @@ tabnew +setlocal\ bufhidden=wipe
 tabrewind
 edit src/main.rs
 argglobal
-balt ~/.cargo/registry/src/index.crates.io-6f17d22bba15001f/plotly-0.8.4/src/bindings.rs
 setlocal fdm=indent
 setlocal fde=0
 setlocal fmr={{{,}}}
@@ -33,18 +31,22 @@ setlocal fdl=99
 setlocal fml=1
 setlocal fdn=20
 setlocal fen
-12
+8
 normal! zo
-13
+20
 normal! zo
-29
+23
 normal! zo
-let s:l = 21 - ((20 * winheight(0) + 24) / 49)
+25
+normal! zo
+34
+normal! zo
+let s:l = 20 - ((19 * winheight(0) + 24) / 49)
 if s:l < 1 | let s:l = 1 | endif
 keepjumps exe s:l
 normal! zt
-keepjumps 21
-normal! 038|
+keepjumps 20
+normal! 025|
 tabnext
 edit ~/code/kostalui/src/log/mod.rs
 argglobal
@@ -57,14 +59,26 @@ setlocal fdl=99
 setlocal fml=1
 setlocal fdn=20
 setlocal fen
+21
+normal! zo
 22
 normal! zo
-let s:l = 1 - ((0 * winheight(0) + 24) / 49)
+45
+normal! zo
+47
+normal! zo
+48
+normal! zo
+55
+normal! zo
+57
+normal! zo
+let s:l = 4 - ((3 * winheight(0) + 24) / 49)
 if s:l < 1 | let s:l = 1 | endif
 keepjumps exe s:l
 normal! zt
-keepjumps 1
-normal! 013|
+keepjumps 4
+normal! 065|
 tabnext 1
 set stal=1
 if exists('s:wipebuf') && len(win_findbuf(s:wipebuf)) == 0 && getbufvar(s:wipebuf, '&buftype') isnot# 'terminal'
@@ -78,7 +92,6 @@ if filereadable(s:sx)
   exe "source " . fnameescape(s:sx)
 endif
 let &g:so = s:so_save | let &g:siso = s:siso_save
-nohlsearch
 doautoall SessionLoadPost
 unlet SessionLoad
 " vim: set ft=vim :
