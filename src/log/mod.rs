@@ -1,6 +1,5 @@
-use chrono::{DateTime, FixedOffset, Local, NaiveDateTime, TimeZone, Utc};
-use leptos::log;
-use plotly::{Scatter, Trace};
+use chrono::{DateTime, FixedOffset, Local, NaiveDateTime};
+use plotly::Trace;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
