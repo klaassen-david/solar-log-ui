@@ -1,15 +1,15 @@
+use std::collections::HashMap;
+
 use chrono::{DateTime, FixedOffset, Local, NaiveDateTime};
-use plotly::Trace;
-use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
 pub mod file;
 
-#[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Default)]
 pub struct Log {
     pub keys: Vec<String>,
-    pub units: String,
-    pub entries: Vec<Box<Vec<Option<f64>>>>,
+    pub units: Vec<Option<String>>,
+    pub entries: Vec<Vec<Option<f64>>>,
     pub timestamps: Vec<DateTime<Local>>,
 }
 
@@ -32,23 +32,35 @@ impl Log {
         (0..5).for_each(|_| {
             lines.next();
         }); // cut header
-        let units: String = lines.next().unwrap().to_string();
+        let mut units = HashMap::<String, String>::new();
+        lines.next().unwrap().split(',').for_each(|s| {
+            let mut iter = s.rsplit(' ');
+            let s = iter.next().unwrap();
+            let mut sub_iter = s.split('[');
+            let key = sub_iter.next().unwrap().to_string();
+            let val = sub_iter.next().unwrap().trim_matches(']').to_string();
+            while let Some(alt_key) = iter.next().filter(|s| *s != "Logdaten" && !s.is_empty()) {
+                units.insert(alt_key.to_string(), val.clone());
+            }
+            units.insert(key, val);
+        });
+        units.insert("S".to_owned(), "Status".to_owned());
+        units.insert("Err".to_owned(), "Error".to_owned());
+        // leptos::log!("{:?}", units);
         let keys: Vec<String> = match lines.next() {
-            Some(lines) => lines.split('\t').map(|s| s.to_string()).collect(),
+            Some(lines) => lines.split('\t').skip(1).map(|s| s.to_string()).collect(),
             None => {
                 return Err(ParseError::NotEnoughLines);
             }
         };
-        let len = keys.len();
-        let entries = (0..len)
-            .map(|_| Box::new(Vec::<Option<f64>>::new()))
+        let units: Vec<_> = keys
+            .iter()
+            .map(|k| units.get(k.rsplit(' ').next().unwrap()).map(|s| s.clone()))
             .collect();
-        let mut log = Log {
-            keys,
-            units,
-            entries,
-            timestamps: Vec::new(),
-        };
+        // leptos::log!("{:?}", keys.iter().zip(units.iter()).collect::<Vec<_>>());
+        let len = keys.len();
+        let mut entries: Vec<_> = (0..len).map(|_| (Vec::<Option<f64>>::new())).collect();
+        let mut timestamps = Vec::new();
         lines
             .into_iter()
             .map(|line| {
@@ -60,21 +72,34 @@ impl Log {
                     .collect::<Vec<Option<f64>>>()
             })
             .for_each(|entry| {
-                log.timestamps.push(DateTime::<Local>::from_utc(
+                timestamps.push(DateTime::<Local>::from_utc(
                     NaiveDateTime::from_timestamp_opt(entry[0].unwrap() as i64, 0).unwrap(),
                     FixedOffset::east_opt(2 * 60 * 60).unwrap(),
                 ));
-                (1..log.keys.len()).for_each(|i| {
-                    log.entries
+                (1..keys.len()).for_each(|i| {
+                    entries
                         .get_mut(i - 1)
                         .unwrap()
                         .push(*entry.get(i).unwrap_or(&None))
                 });
             });
+        let log = Log {
+            keys,
+            units,
+            entries,
+            timestamps,
+        };
         Ok(log)
     }
 
-    pub fn scatter() -> Box<dyn Trace> {
-        todo!()
+    pub fn get_legend(&self, idx: usize) -> String {
+        format!(
+            "{}{}",
+            self.keys[idx].clone(),
+            self.units[idx]
+                .clone()
+                .map(|u| " in ".to_string() + &u)
+                .unwrap_or("".to_string())
+        )
     }
 }
